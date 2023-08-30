@@ -1,0 +1,141 @@
+{% load static %}
+ <!DOCTYPE html>
+   <html lang="en">
+
+   <head>
+   <meta charset="UTF-8">
+   <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport">
+   <title>MM CHAT</title>
+
+   <link rel="stylesheet" href="{% static 'css/app.min.css' %}">
+   <link rel="stylesheet" href="{% static 'css/components.css' %}">
+   <!-- Custom style CSS -->
+   </head>
+
+   <body>
+   <div class="loader"></div>
+   <div id="app">
+      <div class="main-wrapper main-wrapper-1">
+         <div class="row m-5">
+            <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
+            <div class="card">
+               <div class="body">
+                  <div id="plist" class="people-list">
+                  <div class="chat-search">
+                     <input type="text" class="form-control" placeholder="Search..." />
+                  </div>
+                  <div class="m-b-20">
+                     <div id="chat-scroll">
+                        <ul class="chat-list list-unstyled m-b-0">
+                        </ul>
+                     </div>
+                  </div>
+                  </div>
+               </div>
+            </div>
+            </div>
+            <div class="col-xs-12 col-sm-12 col-md-9 col-lg-9">
+            <div class="card">
+               <div class="chat">
+                  <div class="chat-header clearfix">
+                  <img src="{% static 'img/users/user-1.png' %}" alt="avatar">
+                  <div class="chat-about">
+                     <div class="chat-with">Maria Smith</div>
+                     <div class="chat-num-messages">2 new messages</div>
+                  </div>
+                  </div>
+               </div>
+               <div class="chat-box" id="mychatbox">
+                  <div class="card-body chat-content">
+                  </div>
+                  <div class="card-footer chat-form">
+                  <!-- <form id="chat-form"> -->
+                     <input type="text" class="form-control msg-input" placeholder="Type a message">
+                     <button class="btn btn-primary chat-bnt">
+                        <i class="far fa-paper-plane"></i>
+                     </button>
+                  <!-- </form> -->
+                  </div>
+               </div>
+            </div>
+            </div>
+         </div>
+      </div>
+   </div>
+
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.9.2/qs.min.js"  integrity="sha256-TDxXjkAUay70ae/QJBEpGKkpVslXaHHayklIVglFRT4="  crossorigin="anonymous"></script>
+   <script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin="anonymous"></script>
+   
+   <script rel="stylesheet" src="{% static 'js/app.min.js' %}"></script>
+   <script rel="stylesheet" src="{% static 'js/page/chat.js' %}"></script>
+   <script rel="stylesheet" src="{% static 'js/scripts.js' %}"></script>
+   <script rel="stylesheet" src="{% static 'js/chat.js' %}"></script>
+
+   <script>
+      let user = '{{ user }}'
+      // const socket = io.connect('http://localhost:3000',{
+      //    transports: ['websocket']
+      // });  // Replace with your server URL
+      data = {}
+      data['user'] = user
+      socket.emit("authUser",data);
+      socket.emit("getallRooms");
+      
+      
+      // var rooms = {{ rooms }}
+
+      $(document).ready(()=>{
+
+      
+
+         
+      })
+
+      // for (i in rooms) {
+      //    console.log(i);
+      // }
+
+      // Request permission for notifications
+      if (Notification.permission !== 'granted') {
+         Notification.requestPermission();
+      }
+
+      socket.on('notification', ({message, room, name}) => {
+         // Display a browser notification
+         if (('Notification' in window) && Notification.permission === 'granted') {
+            title = "MM Chat"
+            const notification = new Notification(title, { body:message });
+            notification.addEventListener('click', () => {
+               // Redirect to the chat when notification is clicked
+               // window.location.href = `room/${room}`;  // Adjust the URL structure
+               const newTab = window.open(window.location.href, '_blank');
+
+               newTab.addEventListener('load', () => {
+               // Here, you can communicate with the new tab to load the chat content.
+               // For example: newTab.postMessage({ type: 'loadChat', data: chatData }, '*');
+
+                  console.log({message, room, name})
+                  user=name
+                  alert("44")
+                  socket.emit('joinRoom', { user, room }, (error) => {
+                     if (error) {
+                        alert(error);
+                        }
+                  });
+
+               });
+            });
+         }
+      });
+
+      console.log(socket);
+
+
+   </script>
+
+   
+
+   </body>
+
+
+   </html>
