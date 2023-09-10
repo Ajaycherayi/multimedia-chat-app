@@ -139,6 +139,10 @@
 		});
 	});
 
+	window.addEventListener("beforeunload", function() {
+		socket.close();
+	});
+
 	// Click on Room
 	$(document).on('click', '.item-room', function () {
 
@@ -170,10 +174,6 @@
 		}
 	});
 
-	window.addEventListener("beforeunload", function() {
-		socket.close();
-	});
-    
 	// Send Message
 	$("#chat-form").submit(function(e){
 		e.preventDefault();
@@ -288,7 +288,7 @@
 			for (key in room['room_chat']){
 				html += `<li class="left clearfix" id=${key}>`
 				html += `	<span class="chat-img pull-left">`
-				html += `		<img src="${room['room_participents'][room['room_chat'][key]['sender']]['profile_image']}" alt="User Avatar">`
+				html += `		<img src='${room['room_participents'][room['room_chat'][key]['sender']]['profile_image']}' alt="User Avatar">`
 				html += `	</span>`
 				html += `   <div class="chat-body clearfix">`
 				html += `		<div class="header">`
@@ -311,9 +311,4 @@
 
 </script>
 <script src="{% static 'js/chat_room.js' %}"></script>
-
-
-
-
-
 </html>
