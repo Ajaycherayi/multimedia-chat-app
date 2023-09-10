@@ -23,9 +23,9 @@
 					<h1 class="text-primary"><i class="fas fa-comments"></i> MM CHAT</h1>
 				</div>
 				<div class="card-body">
-					<form action="{% url 'chat' %}">
+					<form action="{% url 'home' %}" method='POST' >
 
-
+						{% csrf_token %}
 						<div class="form-group">
 							<label for="username">Username</label>
 							<input
@@ -41,12 +41,12 @@
 						<div class="form-group">
 							<label for="room">Room</label>
 							<select class="form-control form-control-sm" name="room" id="room">
-								<option value="111111">JavaScript</option>
-								<option value="222222">Python</option>
-								<option value="333333">PHP</option>
-								<option value="444444">C#</option>
-								<option value="555555">Ruby</option>
-								<option value="666666">Java</option>
+								<option value="javascript">JavaScript</option>
+								<option value="python">Python</option>
+								<option value="php">PHP</option>
+								<option value="csharp">C#</option>
+								<option value="ruby">Ruby</option>
+								<option value="java">Java</option>
 							</select>
 						</div>
 						<button type="submit" class="btn btn-primary">Join Chat</button>

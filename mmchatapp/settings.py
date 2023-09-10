@@ -25,7 +25,7 @@ SECRET_KEY = '^4z0#=^dtu%=7vy1)3-jznxxtkpf1x&($4ua88v1@%xx@w(!xj'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.1.4','localhost']
 
 
 # Application definition
@@ -89,6 +89,9 @@ DATABASES = {
         'PASSWORD': 'postgres',
         'HOST': 'localhost',
         'PORT': '5432',
+        #  'OPTIONS': {
+        #     'init_command': "SET time_zone='+00:00';",
+        # },
     }
 }
 
@@ -123,7 +126,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)

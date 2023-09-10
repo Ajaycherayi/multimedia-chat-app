@@ -1,0 +1,319 @@
+{% load static %}
+{% load chatroom_helpers %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MM CHAT</title>
+	<link rel="stylesheet" href="{% static 'css/app.min.css' %}">
+   <link rel="stylesheet" href="{% static 'css/chat_room.css' %}">
+</head>
+<body>
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
+<div class="container bootstrap snippets bootdey">
+    <div class="row mt-5">
+		<div class="col-md-4 bg-white ">
+            <div class=" row border-bottom padding-sm" style="height: 40px;">
+            	CHAT ROOMS
+            </div>
+            
+            <!-- member list -->
+            <ul class="chat-room-list">
+				{% for key,display_item in room_data.items %}
+
+					{% if active_room == key %}
+						<li class='bounceInDown item-room active' id="{{key}}" data-room="{{key}}">
+					{% else %}
+						<li class='bounceInDown item-room' id="{{key}}" data-room="{{key}}">
+					{% endif %}
+					<a class='clearfix' style="cursor: pointer;">
+					<img src='https://bootdey.com/img/Content/user_1.jpg' alt='' class='img-circle'>
+					
+					<div class='friend-name'>
+					<strong>{{display_item.name}}</strong></div>
+
+					<div class='last-message text-muted'>{{display_item.last_message}}</div>
+					<small class='time text-muted'>{{display_item.message_time}}</small>
+					<small class='chat-alert text text-danger'>{{display_item.message_count}}</small>
+					</a></li>
+				{% endfor %}              
+            </ul>
+		</div>
+        
+        <!-- selected chat -->
+    	<div class="col-md-8 bg-white ">
+            <div class="chat-message">
+                <ul class="chat">
+					{% if active_room %}
+						{% if room_chat %}
+							{% for key,display_item in room_chat.items %}
+								<li class="left clearfix" id="{{key}}">
+									<span class="chat-img pull-left">
+										<img src="{% get_sender_profile room_participents display_item.sender %}" alt="User Avatar">
+									</span>
+									<div class="chat-body clearfix">
+										<div class="header">
+											<strong class="primary-font">{% get_sender_name room_participents display_item.sender %}</strong>
+											<small class="pull-right text-muted"><i class="fa fa-clock-o"></i> {{display_item.time}}</small>
+										</div>
+										<p>
+											{{display_item.message}}
+										</p>
+									</div>
+								</li>
+							{% endfor %}
+						{% else %}
+							Lets Chat
+						{% endif %}
+					{% else %}
+						No Messages
+					{% endif %}
+                </ul>
+            </div>
+            <div class="chat-box bg-white">
+            	<span><button type="button" class="btn btn-bold btn-brand btn-sm mr-1" data-toggle="modal" data-target="#id_document_upload_form">Upload Document </button><span>
+				<form id="chat-form">
+					{% csrf_token %}
+					<div class="input-group">
+						<input class="form-control border no-shadow no-rounded message" id="message"	type="text"	placeholder="Type your message here" required autocomplete="off"	/>
+						<span class="input-group-btn">
+							<button class="btn btn-success no-rounded message-send"><i class="fas fa-paper-plane"></i> Send</button>
+						</span>
+					</div>
+				</form>
+            </div>            
+		</div>        
+	</div>
+</div>
+</body>
+
+<script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.9.2/qs.min.js"  integrity="sha256-TDxXjkAUay70ae/QJBEpGKkpVslXaHHayklIVglFRT4="  crossorigin="anonymous"></script>
+<script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin="anonymous"></script>
+   
+
+<script type="text/javascript">
+	
+	var socket = io('http://192.168.1.4:3000',{
+		transports:['websocket'],
+		reconnection: true,            // Enable reconnection
+		reconnectionAttempts: 5,       // Number of reconnection attempts
+		reconnectionDelay: 1000,       // Delay between reconnection attempts (in milliseconds)
+		reconnectionDelayMax: 5000,    // Maximum delay between reconnection attempts
+		randomizationFactor: 0.5,  
+	});
+	var user = "{{user_id}}"
+	console.log(user)
+	let roomList = []
+	"{% for key in room_id_list %}"
+	   roomList.push("{{key}}")
+	"{% endfor %}"
+	
+	// Ready
+	$(document).ready(function(){
+
+		$('.chat-box').hide()
+		const chatMessages = document.querySelector('.chat');
+		chatMessages.scrollTop = chatMessages.scrollHeight
+		
+		// Request permission for notifications
+		Notification.requestPermission().then((result) => {
+			console.log(result);
+		});
+
+		socket.on('connected', function () {	
+			
+			console.log("Socket Successfully Connected to the Server");
+			console.log("ROOM LIST ",roomList);
+			
+			socket.emit('setAllRooms', roomList, function (data) {
+				console.log(data)
+				
+			});
+
+			let room = "{{active_room}}"
+			if (room != undefined && room != '' && room){
+				$('.chat-box').show()
+			}
+		});
+	});
+
+	// Click on Room
+	$(document).on('click', '.item-room', function () {
+
+		// remove previous active div
+		const activeClass = $('.item-room.active');
+		activeClass.removeClass('active');
+		let prevRoom = activeClass.attr('id')
+
+		// set selected room active div
+		$(this).addClass('active')
+		let room = $(this).attr('id')
+		
+		if (!room) {
+			alert('Invalid Chat Room')
+			return false
+		}
+
+		if (prevRoom !== room || prevRoom === undefined){
+
+			socket.emit('setActiveChat',{ user, room }, function (msg) {
+				console.log("getRoomChat | Emit ",msg)
+			});
+			
+			clearRoomChat(room)
+			clearNotifications(room)
+			getRoomMessagesAjax(room) 
+			updateLastMessageAjax(room,user)   
+
+		}
+	});
+
+	window.addEventListener("beforeunload", function() {
+		socket.close();
+	});
+    
+	// Send Message
+	$("#chat-form").submit(function(e){
+		e.preventDefault();
+
+		// Get message text
+		let message = e.target.elements.message.value;
+		message = message.trim();
+		let room = getRoomId()
+
+		socket.on('connect', function() {
+			console.log('check 2', socket.connected);
+		});
+
+		if (!room || !message) {
+			return false;
+		}
+
+		sendMessageAjax(room,message)
+		
+		// Clear input
+		e.target.elements.message.value = '';
+		e.target.elements.message.focus();
+	});
+
+
+ 	function getRoomMessagesAjax(room) {
+		var actionurl = ''
+		actionurl += '?room='+room;
+		history.pushState(null, null, actionurl);
+		var csrf_token = $('input[name="csrfmiddlewaretoken"]').val();
+		$.ajax({
+			url: actionurl, // Replace with your actual URL
+			type: 'PUT',
+			headers: {
+				'X-CSRFToken': csrf_token  // Include the CSRF token in the headers
+			},
+			data: { 'room' : room },
+			success: function(data) {
+				loadRoomChat(data)
+				$('.chat-box').show()
+			},
+			error: function(xhr, status, error) {
+				alert("Error: " + xhr.responseJSON);
+			}
+		});
+	}
+
+	 function updateLastMessageAjax(room) {
+		var actionurl = "update_last_view_message/"
+		var csrf_token = $('input[name="csrfmiddlewaretoken"]').val();
+		$.ajax({ 
+            url: actionurl,
+            type: 'POST',
+            data: {'room' :room,'user':user },  
+			headers: {
+				'X-CSRFToken': csrf_token  // Include the CSRF token in the headers
+			},
+            success: function (response) {
+                console.log("updateLastMessageAjax Success")
+            },
+			error: function(xhr, status, error) {
+				alert("Error: " + xhr.responseJSON);
+			}
+        });
+	}
+
+	function sendMessageAjax(room,message) {
+		var actionurl = `send_message/`
+		var csrf_token = $('input[name="csrfmiddlewaretoken"]').val();
+		$.ajax({ 
+            url: actionurl,
+            type: 'POST',
+            data: {'room' :room, 'message' : message,'user':user,csrfmiddlewaretoken: csrf_token},  
+			headers: { 'X-METHODOVERRIDE': 'POST' },
+            success: function (response) {
+				
+				let room = getRoomId()
+				// Brodcast Message
+				socket.emit('broadcastMessage',{response , room}, (d) => {
+					console.log("broadcastMessage | Emit ",d)
+				});
+
+            },
+			error: function(xhr, status, error) {
+				alert("Error: " + xhr.responseJSON);
+			}
+        });
+	}
+
+	socket.on('receiveMessage',(response) => {
+		loadRoomChat(response)
+	});
+
+	function getRoomId() {
+		const activeClass = $('.item-room.active');
+		let roomId = activeClass.attr('id')
+		if (roomId){
+			return roomId
+		}else{
+			return ''
+		}
+	}
+
+	function loadRoomChat(room){
+		const activeChatId = $('.item-room.active').attr('data-room')	   
+	
+		if (room['active_room'] != undefined && room['active_room'].length > 0 && 
+			activeChatId != undefined && activeChatId.length > 0 && 
+			activeChatId == room['active_room']){
+	
+			html = ''
+			for (key in room['room_chat']){
+				html += `<li class="left clearfix" id=${key}>`
+				html += `	<span class="chat-img pull-left">`
+				html += `		<img src="${room['room_participents'][room['room_chat'][key]['sender']]['profile_image']}" alt="User Avatar">`
+				html += `	</span>`
+				html += `   <div class="chat-body clearfix">`
+				html += `		<div class="header">`
+				html += `			<strong class="primary-font">${room['room_participents'][room['room_chat'][key]['sender']]['name']}</strong>`
+				html += `			<small class="pull-right text-muted"><i class="fa fa-clock-o"></i>${room['room_chat'][key]['time']}</small>`
+				html += `		</div>`
+				html += `		<p>`
+				html += `			${room['room_chat'][key]['message']}`
+				html += `		</p>`
+				html += `   </div>`
+				html += `</li>`
+	
+			}
+			$('.chat').append(html);
+		}
+	
+		const chatMessages = document.querySelector('.chat');
+		chatMessages.scrollTop = chatMessages.scrollHeight
+	}
+
+</script>
+<script src="{% static 'js/chat_room.js' %}"></script>
+
+
+
+
+
+</html>

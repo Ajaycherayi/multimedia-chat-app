@@ -1,7 +1,7 @@
 const users = [];
 
 const addUser = ({ id, name, room }) => {
-    name = name.trim().toLowerCase();
+  name = name.trim().toLowerCase();
 	room = room.trim().toLowerCase();
     
 	const existingUser = users.find((user) => {
@@ -34,8 +34,10 @@ const removeUser = (id) => {
     console.log('Remaining Users | ',users)
 }
 
-const getUser = (id) => users
-	.find((user) => user.id.toString() === id.toString());
+const getUser = (id) => {
+  console.log("total Users ",users);
+  return users.find((user) => user.id.toString() === id.toString());
+}
 
 const getUsersInRoom = (room) => users
 	.filter((user) => user.room === room);
